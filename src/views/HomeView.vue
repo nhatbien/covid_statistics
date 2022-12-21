@@ -1,113 +1,84 @@
 <template>
-  <main>
-    <div class=" ">
-      <h1 class="text-3xl font-bold text-center mb-4">
+  <PopupCountry v-if="isPopupCountry == true" :country="countryState" />
+  <Loading
+    :active="isLoading"
+    :can-cancel="true"
+    :on-cancel="onCancel"
+    :is-full-page="fullPage"
+  ></Loading>
+  <main class="">
+    <!-- <div class=" ">
+      <h1 class="text-3xl font-bold text-center mb-4 p-4">
         Globally, as of 5:07pm CET, 16 December 2022, there have been
         647,972,911 confirmed cases of COVID-19, including 6,642,832 deaths,
         reported to WHO. As of 12 December 2022, a total of 13,008,560,983
         vaccine doses have been administered.
       </h1>
-      <p class="text-gray-700 leading-relaxed">
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-        tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
-        veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
-        commodo consequat. {{ total }}
-      </p>
-    </div>
-    <div class="flex flex-row p-3 m-3">
-      <div class="flex flex-col">
-        <span> Global Situation </span>
-        <span class="text-3xl"> {{ totalConfirmed }} </span>
-        <span> confirmed cases </span>
-      </div>
-      <BarChart class="w-full" v-bind="barChartProps" />
-    </div>
+    </div> -->
+    <HeadingHome :totalConfirmed="totalConfirmed" :totalDeadth="totalDeaths" />
+    <BarChartCom
+      v-if="dataLabelsDeadth"
+      :dataValues="dataValuesDeadth"
+      :dataLables="dataLabelsDeadth"
+      :total="totalDeaths"
+      title="deadths"
+    />
+    <BarChartCom
+      v-if="dataValuesConfirmed"
+      :dataValues="dataValuesConfirmed"
+      :dataLables="dataLabelsDeadth"
+      :total="totalConfirmed"
+      title="confirmed cases"
+    />
 
-    <div class="flex flex-row p-3 m-3">
-      <div class="flex flex-col">
-        <span class="text-3xl"> {{ totalDeaths }} </span>
-        <span> Deaths </span>
-      </div>
-      <BarChart class="w-full" v-bind="barChartProps" />
-    </div>
-    <div class="">
+    <div class="flex flex-col justify-center">
       <h2 class="text-center text-4xl p-6">
         Reported Cases and Deaths by Country or Territory
       </h2>
-
-      <div class="overflow-x-auto relative">
-        <table class="w-full text-sm text-left text-gray-500">
-          <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-            <tr>
-              <th scope="col" class="py-3 px-6">Product name</th>
-              <th scope="col" class="py-3 px-6">Color</th>
-              <th scope="col" class="py-3 px-6">Category</th>
-              <th scope="col" class="py-3 px-6">Price</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr class="bg-white border-b">
-              <th
-                scope="row"
-                class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap"
-              >
-                Apple MacBook Pro 17"
-              </th>
-              <td class="py-4 px-6">Sliver</td>
-              <td class="py-4 px-6">Laptop</td>
-              <td class="py-4 px-6">$2999</td>
-            </tr>
-            <tr class="bg-white border-b">
-              <th
-                scope="row"
-                class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap"
-              >
-                Microsoft Surface Pro
-              </th>
-              <td class="py-4 px-6">White</td>
-              <td class="py-4 px-6">Laptop PC</td>
-              <td class="py-4 px-6">$1999</td>
-            </tr>
-            <tr class="bg-white dark:bg-gray-800">
-              <th
-                scope="row"
-                class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap dark:text-white"
-              >
-                Magic Mouse 2
-              </th>
-              <td class="py-4 px-6">Black</td>
-              <td class="py-4 px-6">Accessories</td>
-              <td class="py-4 px-6" v-if="articleList">{{ articleList }}</td>
-            </tr>
-          </tbody>
-        </table>
+           <span v-if="message" class="font-bold text-center text-2xl p-2">
+        {{ message }}
+      </span> 
+      <div class="overflow-x-auto overflow-y-auto relative">
+        <TableCountries v-if="listCountries" :items="listCountries" />
       </div>
+
+   
     </div>
   </main>
 </template>
 <script lang="ts">
-import { BarChart, useBarChart } from "vue-chart-3";
-import {
-  computed,
-  defineComponent,
-  onMounted,
-  reactive,
-  ref,
-  watch,
-} from "vue";
-import { Chart, registerables } from "chart.js";
+import "vue3-loading-overlay/dist/vue3-loading-overlay.css";
 
+import TableCountries from "@/components/TableCountries.vue";
+import PopupCountry from "@/components/PopupCountry.vue";
+import HeadingHome from "@/components/HeadingHome.vue";
+import BarChartCom from "@/components/Chart/BarChartCom.vue";
+import Loading from "vue3-loading-overlay";
+
+import { computed, defineComponent, onMounted, reactive, ref } from "vue";
 import { worldService } from "@/services/covid19/world";
-import type { WorldModel } from "@/models/world";
-
-Chart.register(...registerables);
+import type { Country } from "@/models/world";
+import { useStore } from "@/stores";
 
 export default defineComponent({
-  components: { BarChart },
+  components: {
+    TableCountries,
+    PopupCountry,
+    HeadingHome,
+    BarChartCom,
+    Loading,
+  },
 
   setup() {
-    const dataValues = ref<number[]>([]);
-    const dataLabels = ref<string[]>([]);
+    const store = useStore();
+    const isPopupCountry = computed(() => store.state.isPopupCountry);
+    const countryState = computed(() => store.state.country);
+
+    const dataValuesDeadth = ref<number[]>([]);
+    const dataLabelsDeadth = ref<string[]>([]);
+    const dataValuesConfirmed = ref<number[]>([]);
+    const message = ref<String>("");
+
     var today = new Date();
     var from = new Date();
     today.setDate(today.getDate() - 1);
@@ -118,44 +89,21 @@ export default defineComponent({
       to: today.toISOString(),
     });
 
-    const options = computed(() => ({
-      responsive: true,
-      scales: {
-        y: {
-          beginAtZero: true,
-        },
-      },
-      plugins: {
-        legend: {
-          display: false,
-        },
-      },
-    }));
-    const chartData = computed(() => ({
-      labels: dataLabels.value,
-      datasets: [
-        {
-          data: dataValues.value,
-          backgroundColor: [
-            "#123E6B",
-            "#123E6B",
-
-            "#123E6B",
-            "#123E6B",
-            "#123E6B",
-          ],
-        },
-      ],
-    }));
-
-    const { barChartProps, barChartRef } = useBarChart({
-      chartData,
-      options,
-    });
     const totalConfirmed = ref(0);
     const totalDeaths = ref(0);
     const totalRecovered = ref(0);
-    const total = ref(0);
+
+    const isLoading = ref(false);
+    const fullPage = ref(true);
+    const doAjax = () => {
+      isLoading.value = true;
+      setTimeout(() => {
+        isLoading.value = false;
+      }, 5000);
+    };
+    const onCancel = () => {
+      isLoading.value = false;
+    };
 
     const worldServiceTotal = async () => {
       try {
@@ -180,28 +128,57 @@ export default defineComponent({
           return a.TotalConfirmed - b.TotalConfirmed;
         });
         data.forEach((e) => {
-          dataValues.value.push(e.NewConfirmed);
+          dataValuesDeadth.value.push(e.NewDeaths);
+          dataValuesConfirmed.value.push(e.NewConfirmed);
           const date = new Date(e.Date);
-          dataLabels.value.push(`${date.getDate()}/${date.getMonth()}`);
+          dataLabelsDeadth.value.push(`${date.getDate()}/${date.getMonth()}`);
         });
       } catch (error) {
         console.log(error);
       }
     };
 
+    const listCountries = ref<Country[]>([]);
+    const summaryService = async () => {
+      try {
+        const { data, status } = await worldService.summary();
+        console.log(status);
+        if (data.Message != "Caching in progress") {
+          data.Countries.sort(function (a, b) {
+            return a.TotalConfirmed - b.TotalConfirmed;
+          }).reverse();
+          listCountries.value = data.Countries;
+        } else {
+          message.value = "Server Is Error";
+        }
+        console.log(data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
     onMounted(async () => {
+      doAjax();
       await worldServiceTotal();
       await worldServiceDate();
+      await summaryService();
+      onCancel();
     });
 
     return {
-      options,
-      barChartRef,
-      barChartProps,
+      dataLabelsDeadth,
+      dataValuesDeadth,
+      dataValuesConfirmed,
       totalConfirmed,
       totalDeaths,
       totalRecovered,
-      total,
+      listCountries,
+      isLoading,
+      fullPage,
+      onCancel,
+      isPopupCountry,
+      countryState,
+      message,
     };
   },
 });

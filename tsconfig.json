@@ -2,11 +2,17 @@
   "extends": "@vue/tsconfig/tsconfig.web.json",
   "include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
   "compilerOptions": {
+    "allowJs": true,
     "types": ["node"],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
-    }
+      "@/*": ["./src/*"],
+      "components/*": [ "./src/components/*" ],
+
+    },
+    "strict": true,
+
+
   },
 
   "references": [

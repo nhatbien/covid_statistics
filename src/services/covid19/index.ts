@@ -80,12 +80,12 @@ api.interceptors.response.use(
 ); */
 
 export class ApiCovidService {
-  private feature: string;
+/*   private feature: string;
 
   constructor(feature: string) {
     this.feature = feature;
   }
-
+ */
   // get
   protected $get<T extends CommonResponse>(
     action: string,
@@ -93,7 +93,7 @@ export class ApiCovidService {
     config: PlainObject = {}
   ): Promise<T> {
 
-    return api.get(`/${this.feature}${action}`, {
+    return api.get(`/${action}`, {
       ...config,
       params: requestParamsFilter(params, true),
     });

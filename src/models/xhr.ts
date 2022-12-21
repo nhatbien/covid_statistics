@@ -7,5 +7,3 @@ export interface CommonResponse<T = unknown> {
   msg?: string;
   data?: T | T[];
 }
-
-
