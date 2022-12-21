@@ -10,10 +10,5 @@ const app = createApp(App);
 
 app.use(createPinia());
 app.use(router);
-/* app.use(VueGoogleMaps, {
-  load: {
-    key: "AIzaSyBHHzALzXn6k4LScNNWdBV_InwoOXOSaFM",
-    //] language: 'de',
-  },
-}); */
+
 app.mount("#app");
